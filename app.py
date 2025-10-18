@@ -158,9 +158,11 @@ def health_check():
 
 # ---------------------- Main Entry Point ----------------------
 
+# Initialize model when app is imported (works with Gunicorn)
+initialize_model()
+
 if __name__ == '__main__':
     print("🚀 Starting Flask server...")
-    print("📦 Ensuring model files are in './model' directory")
-    initialize_model()
     app.run(host='0.0.0.0', port=5000)  # No debug=True for production
+
 
