@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TicketAI — Smart Support</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07070f;--surface:#0f0f1e;--surface2:#141428;
+  --border:rgba(110,100,255,0.13);--border2:rgba(110,100,255,0.26);
+  --accent:#6c63ff;--accent2:#a78bfa;--accent3:#38bdf8;
+  --text:#eeeef8;--text2:#9898bc;--text3:#55557a;
+  --ok:#34d399;--err:#f87171;--glow:rgba(108,99,255,0.3);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 70% 55% at 12% 0%,rgba(108,99,255,0.15) 0%,transparent 55%),
+             radial-gradient(ellipse 55% 45% at 90% 100%,rgba(56,189,248,0.09) 0%,transparent 55%);
+  pointer-events:none;z-index:0;}
+
+body::after{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(108,99,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(108,99,255,0.03) 1px,transparent 1px);
+  background-size:64px 64px;animation:grid 25s linear infinite;pointer-events:none;z-index:0;}
+@keyframes grid{from{background-position:0 0}to{background-position:64px 64px}}
+
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;}
+.o1{width:520px;height:520px;background:rgba(108,99,255,0.07);top:-220px;left:-160px;animation:drift 10s ease-in-out infinite;}
+.o2{width:420px;height:420px;background:rgba(56,189,248,0.05);bottom:-130px;right:-110px;animation:drift 10s 5s ease-in-out infinite;}
+@keyframes drift{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-26px) scale(1.04)}}
+
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── Header ── */
+header{position:sticky;top:0;z-index:100;height:66px;padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(7,7,15,0.78);backdrop-filter:blur(22px);border-bottom:1px solid var(--border);}
+header::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(108,99,255,0.55),rgba(56,189,248,0.3),transparent);}
+
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none;}
+.logomark{width:36px;height:36px;background:linear-gradient(135deg,#6c63ff,#38bdf8);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px rgba(108,99,255,0.35);}
+.logomark svg{width:19px;height:19px;}
+.logoname{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;letter-spacing:-0.025em;color:var(--text);}
+.logoname em{font-style:normal;color:var(--accent2);}
+
+.statuspill{display:flex;align-items:center;gap:7px;padding:5px 14px;
+  background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);
+  border-radius:100px;font-size:12px;font-weight:500;color:var(--ok);}
+.dot{width:6px;height:6px;background:var(--ok);border-radius:50%;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.5)}}
+
+/* ── Hero ── */
+.hero{text-align:center;padding:76px 24px 50px;max-width:620px;margin:0 auto;
+  animation:rise .75s cubic-bezier(.16,1,.3,1) both;}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+
+.eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 16px;
+  background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.22);
+  border-radius:100px;font-size:11.5px;font-weight:500;color:var(--accent2);
+  letter-spacing:.09em;text-transform:uppercase;margin-bottom:26px;}
+.eyebrow svg{width:11px;height:11px;}
+
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(34px,5.2vw,58px);
+  font-weight:800;line-height:1.06;letter-spacing:-.03em;margin-bottom:16px;
+  background:linear-gradient(140deg,#fff 0%,var(--accent2) 45%,var(--accent3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+.hero p{font-size:16px;color:var(--text2);line-height:1.75;font-weight:300;}
+
+/* ── Card ── */
+.formwrap{max-width:600px;width:100%;margin:0 auto;padding:0 24px 88px;
+  animation:rise .75s .1s cubic-bezier(.16,1,.3,1) both;}
+
+.card{background:rgba(13,13,26,0.9);border:1px solid var(--border);border-radius:22px;
+  padding:40px 40px 36px;backdrop-filter:blur(20px);position:relative;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(108,99,255,0.04),0 40px 80px rgba(0,0,0,.55);}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,rgba(108,99,255,.7) 35%,rgba(56,189,248,.45) 65%,transparent 95%);}
+
+/* ── Section label ── */
+.slabel{display:flex;align-items:center;gap:9px;margin-bottom:12px;}
+.slabel svg{width:15px;height:15px;fill:none;stroke:var(--text3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.slabel span{font-family:'Syne',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);letter-spacing:-.01em;}
+.slabel small{font-size:11px;color:var(--text3);font-style:italic;margin-left:auto;}
+
+/* ── Field ── */
+.fg{margin-bottom:0;}
+
+.flabel{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--text2);margin-bottom:8px;letter-spacing:.01em;}
+.flabel .req{color:var(--accent2);font-size:9px;margin-left:2px;}
+.flabel .opt{font-size:11px;color:var(--text3);font-weight:400;font-style:italic;margin-left:auto;}
+.flabel svg{width:14px;height:14px;fill:none;stroke:var(--text3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+
+.ibox{position:relative;}
+.iico{position:absolute;left:15px;top:50%;transform:translateY(-50%);pointer-events:none;z-index:1;
+  width:17px;height:17px;display:flex;align-items:center;justify-content:center;}
+.iico svg{width:15px;height:15px;fill:none;stroke:var(--text3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s;}
+.ibox:focus-within .iico svg{stroke:var(--accent2);}
+
+.ifield{width:100%;padding:14px 16px 14px 44px;
+  background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:12px;
+  color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;
+  transition:border-color .25s,background .25s,box-shadow .25s;outline:none;-webkit-appearance:none;}
+.ifield::placeholder{color:var(--text3);}
+.ifield:hover{border-color:var(--border2);background:rgba(255,255,255,.05);}
+.ifield:focus{border-color:var(--accent);background:rgba(108,99,255,.065);
+  box-shadow:0 0 0 3px rgba(108,99,255,.14),0 0 20px rgba(108,99,255,.08);}
+.ifield:disabled{opacity:.36;cursor:not-allowed;}
+
+textarea.ifield{padding-left:16px;padding-top:16px;min-height:136px;resize:vertical;line-height:1.65;}
+
+.cctr{text-align:right;font-size:11px;color:var(--text3);margin-top:5px;transition:color .2s;}
+.cctr.warn{color:#fbbf24;}.cctr.over{color:var(--err);}
+
+/* ── Divider ── */
+.div{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:30px 0;}
+
+/* ── Or row ── */
+.orrow{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.orline{flex:1;height:1px;background:var(--border);}
+.ortext{font-size:11.5px;color:var(--text3);letter-spacing:.03em;white-space:nowrap;}
+
+/* ── Upload zone ── */
+.uzone{position:relative;border:2px dashed rgba(108,99,255,0.17);border-radius:16px;
+  padding:44px 24px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,0.015);transition:all .3s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+.uzone::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 60%,rgba(108,99,255,0.09) 0%,transparent 70%);
+  opacity:0;transition:opacity .3s;}
+.uzone:hover{border-color:rgba(108,99,255,0.38);background:rgba(108,99,255,0.03);}
+.uzone:hover::before,.uzone.over::before{opacity:1;}
+.uzone.over{border-color:var(--accent);background:rgba(108,99,255,.08);transform:scale(1.01);}
+
+.uicobox{width:58px;height:58px;margin:0 auto 14px;
+  background:rgba(108,99,255,0.1);border:1px solid rgba(108,99,255,0.22);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;transition:all .3s;}
+.uicobox svg{width:24px;height:24px;fill:none;stroke:var(--accent2);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+.uzone:hover .uicobox{background:rgba(108,99,255,.18);transform:translateY(-4px);box-shadow:0 10px 26px rgba(108,99,255,.22);}
+
+.utitle{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;}
+.usub{font-size:13px;color:var(--text3);line-height:1.6;}
+.usub b{color:var(--accent2);font-weight:500;}
+
+/* ── File chip ── */
+.fchip{display:none;align-items:center;gap:14px;padding:14px 17px;
+  background:rgba(52,211,153,0.055);border:1px solid rgba(52,211,153,0.18);
+  border-radius:13px;animation:pop .38s cubic-bezier(.16,1,.3,1);}
+.fchip.show{display:flex;}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+.fchip-ico{width:40px;height:40px;flex-shrink:0;background:rgba(52,211,153,0.1);
+  border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.fchip-ico svg{width:20px;height:20px;fill:none;stroke:var(--ok);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+
+.fchip-info{flex:1;min-width:0;}
+.fchip-name{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.fchip-meta{font-size:11.5px;color:var(--ok);display:flex;align-items:center;gap:5px;}
+.fchip-meta svg{width:11px;height:11px;fill:none;stroke:var(--ok);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+.fchip-btns{display:flex;gap:7px;flex-shrink:0;}
+.icobtn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:inherit;}
+.icobtn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.icobtn:hover{background:rgba(255,255,255,.07);border-color:var(--border2);color:var(--text);}
+.icobtn.del:hover{background:rgba(248,113,113,.09);border-color:rgba(248,113,113,.28);color:var(--err);}
+
+/* ── CSV preview ── */
+.cprev{display:none;margin-top:18px;animation:pop .3s cubic-bezier(.16,1,.3,1);}
+.cprev.show{display:block;}
+.cprev-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.cprev-lbl{font-size:12.5px;font-weight:500;color:var(--text2);}
+.cprev-badge{padding:2px 9px;background:rgba(56,189,248,0.09);border:1px solid rgba(56,189,248,0.18);
+  border-radius:100px;font-size:11px;color:var(--accent3);}
+
+.twrap{border-radius:11px;overflow:hidden;border:1px solid var(--border);}
+.tscroll{overflow-x:auto;}
+.ctable{width:100%;border-collapse:collapse;font-size:12.5px;}
+.ctable thead{background:rgba(108,99,255,0.07);}
+.ctable th{padding:11px 15px;text-align:left;font-size:10.5px;font-weight:600;
+  color:var(--accent2);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;border-bottom:1px solid var(--border);}
+.ctable td{padding:11px 15px;color:var(--text2);border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap;}
+.ctable tbody tr:hover{background:rgba(108,99,255,.04);}
+.ctable tbody tr:last-child td{border-bottom:none;}
+.tfoot{padding:9px 15px;background:rgba(0,0,0,.2);border-top:1px solid var(--border);font-size:11px;color:var(--text3);text-align:center;}
+
+/* ── Trust row ── */
+.trustrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;}
+.tchip{display:flex;align-items:center;gap:7px;padding:6px 12px;
+  background:rgba(255,255,255,.022);border:1px solid var(--border);border-radius:100px;
+  font-size:12px;color:var(--text3);}
+.tchip svg{width:12px;height:12px;fill:none;stroke:var(--text3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+/* ── Submit ── */
+.sbtn{width:100%;padding:17px 32px;margin-top:28px;
+  background:linear-gradient(125deg,#6c63ff 0%,#8b5cf6 45%,#38bdf8 100%);
+  background-size:200% 200%;border:none;border-radius:13px;
+  color:#fff;font-size:15.5px;font-weight:600;
+  font-family:'Syne',sans-serif;letter-spacing:-.01em;cursor:pointer;
+  transition:transform .25s cubic-bezier(.4,0,.2,1),box-shadow .25s,opacity .2s;
+  position:relative;overflow:hidden;animation:gc 5s ease infinite;}
+@keyframes gc{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.sbtn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12),transparent);opacity:0;transition:opacity .25s;}
+.sbtn:hover:not(:disabled)::before{opacity:1;}
+.sbtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 14px 36px rgba(108,99,255,.38),0 0 0 1px rgba(255,255,255,.08);}
+.sbtn:active:not(:disabled){transform:translateY(0) scale(.99);}
+.sbtn:disabled{opacity:.28;cursor:not-allowed;transform:none;}
+.sinner{display:flex;align-items:center;justify-content:center;gap:9px;position:relative;z-index:1;}
+.sarrow{display:flex;align-items:center;transition:transform .25s;}
+.sarrow svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.sbtn:hover:not(:disabled) .sarrow{transform:translateX(4px);}
+
+.spin{display:inline-block;width:17px;height:17px;border:2px solid rgba(255,255,255,.28);
+  border-top-color:#fff;border-radius:50%;animation:spinr .55s linear infinite;}
+@keyframes spinr{to{transform:rotate(360deg)}}
+
+/* ── Top progress bar ── */
+.pb-wrap{position:fixed;top:0;left:0;right:0;height:2px;z-index:200;display:none;}
+.pb-wrap.show{display:block;}
+.pb{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));width:0%;transition:width .35s ease;box-shadow:0 0 10px var(--glow);}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border);padding:28px 24px;text-align:center;}
+footer p{font-size:12.5px;color:var(--text3);}
+
+/* ── Toasts ── */
+.tc{position:fixed;bottom:28px;right:28px;z-index:999;display:flex;flex-direction:column;gap:10px;pointer-events:none;}
+.toast{display:flex;align-items:flex-start;gap:12px;padding:15px 18px;
+  background:rgba(12,12,26,0.97);border:1px solid var(--border2);border-radius:14px;
+  box-shadow:0 20px 56px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);
+  min-width:290px;max-width:350px;pointer-events:all;backdrop-filter:blur(24px);
+  animation:tin .38s cubic-bezier(.16,1,.3,1) both;}
+.toast.exit{animation:tout .28s ease-in forwards;}
+@keyframes tin{from{opacity:0;transform:translateX(110%) scale(.93)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes tout{from{opacity:1;transform:translateX(0) scale(1)}to{opacity:0;transform:translateX(110%) scale(.93)}}
+.toast.success{border-left:3px solid var(--ok);}
+.toast.error{border-left:3px solid var(--err);}
+.tico{width:32px;height:32px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.tico svg{width:15px;height:15px;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+.toast.success .tico{background:rgba(52,211,153,.1);}.toast.success .tico svg{stroke:var(--ok);}
+.toast.error .tico{background:rgba(248,113,113,.1);}.toast.error .tico svg{stroke:var(--err);}
+.ttext{}
+.ttitle{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:2px;font-family:'Syne',sans-serif;}
+.tmsg{font-size:12.5px;color:var(--text2);line-height:1.55;}
+
+@media(max-width:560px){
+  .card{padding:24px 20px 20px;}
+  .hero{padding:60px 20px 38px;}
+  .tc{right:14px;left:14px;}
+  .toast{min-width:auto;}
+  .trustrow{gap:6px;}
+}
+</style>
+</head>
+<body>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="pb-wrap" id="pbw"><div class="pb" id="pb"></div></div>
+
+<div class="wrap">
+
+<header>
+  <a href="#" class="logo">
+    <div class="logomark">
+      <!-- ticket icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 9a2 2 0 012-2h16a2 2 0 012 2v1a2 2 0 000 4v1a2 2 0 01-2 2H4a2 2 0 01-2-2v-1a2 2 0 000-4V9z"/>
+        <line x1="9" y1="7" x2="9" y2="17" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+    <span class="logoname">Ticket<em>AI</em></span>
+  </a>
+  <div class="statuspill"><div class="dot"></div>System Online</div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow">
+    <!-- star icon -->
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Final Year Project
+  </div>
+  <h1>Submit Your Support Ticket</h1>
+  <p>Describe your issue and our AI will analyse, categorise, and route it — instantly.</p>
+</section>
+
+<div class="formwrap">
+  <div class="card">
+    <form id="ticketForm" novalidate>
+
+      <!-- Email -->
+      <div class="slabel">
+        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+        <span>Contact</span>
+      </div>
+      <div class="fg" style="margin-bottom:24px">
+        <label class="flabel" for="ticketEmail">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          Email Address <span class="req">● required</span>
+        </label>
+        <div class="ibox">
+          <div class="iico">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+          </div>
+          <input type="email" id="ticketEmail" class="ifield" placeholder="you@company.com" autocomplete="email">
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <!-- Ticket text -->
+      <div class="slabel">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Ticket Description</span>
+        <small>optional if uploading CSV</small>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <textarea id="ticketText" class="ifield" placeholder="Describe your issue in detail — include steps to reproduce, what you expected vs what happened, and any error messages you saw..." maxlength="2000"></textarea>
+        <div class="cctr" id="cctr">0 / 2000</div>
+      </div>
+
+      <div class="div"></div>
+
+      <!-- Upload -->
+      <div class="slabel">
+        <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        <span>Bulk Upload</span>
+        <small>.csv · max 10 MB</small>
+      </div>
+
+      <div class="orrow">
+        <div class="orline"></div>
+        <span class="ortext">or upload a CSV file instead</span>
+        <div class="orline"></div>
+      </div>
+
+      <div id="dzWrap">
+        <div class="uzone" id="dropzone">
+          <div class="uicobox">
+            <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+          </div>
+          <div class="utitle">Drop your CSV here</div>
+          <p class="usub">Drag &amp; drop, or <b>click to browse</b></p>
+        </div>
+        <input type="file" id="fileInput" accept=".csv" style="display:none">
+      </div>
+
+      <!-- File chip -->
+      <div class="fchip" id="fchip">
+        <div class="fchip-ico">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 13 11 15 15 11"/></svg>
+        </div>
+        <div class="fchip-info">
+          <div class="fchip-name" id="chipName">—</div>
+          <div class="fchip-meta">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="chipMeta">Ready</span>
+          </div>
+        </div>
+        <div class="fchip-btns">
+          <button type="button" class="icobtn" id="prevBtn" title="Preview">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          <button type="button" class="icobtn del" id="rmBtn" title="Remove">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- CSV preview -->
+      <div class="cprev" id="cprev">
+        <div class="cprev-head">
+          <span class="cprev-lbl">Preview</span>
+          <span class="cprev-badge" id="cprevBadge">0 rows</span>
+        </div>
+        <div class="twrap">
+          <div class="tscroll">
+            <table class="ctable">
+              <thead id="thead"></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <div class="tfoot" id="tfoot"></div>
+        </div>
+      </div>
+
+      <!-- Trust chips -->
+      <div class="trustrow">
+        <div class="tchip">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          End-to-end encrypted
+        </div>
+        <div class="tchip">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          AI processes instantly
+        </div>
+        <div class="tchip">
+          <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.4 1.14 2 2 0 012.4.84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.19a16 16 0 006.29 6.29l1.42-1.42a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15.18v1.74z"/></svg>
+          Reply to your email
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="sbtn" id="sbtn" disabled>
+        <div class="sinner">
+          <span id="slbl">Submit Ticket</span>
+          <span class="sarrow" id="sarrow">
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </span>
+        </div>
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<footer><p>Final Year Project &nbsp;·&nbsp; AI-Powered Ticket System &nbsp;·&nbsp; Powered by n8n</p></footer>
+</div>
+
+<div class="tc" id="tc"></div>
+
+<script>
+const WEBHOOK='http://localhost:5678/webhook-test/d5399633-16f5-4cb7-a5d7-701195180fda';
+const $=id=>document.getElementById(id);
+const E={
+  form:$('ticketForm'),email:$('ticketEmail'),text:$('ticketText'),cctr:$('cctr'),
+  fi:$('fileInput'),dz:$('dropzone'),dzw:$('dzWrap'),
+  fchip:$('fchip'),cn:$('chipName'),cm:$('chipMeta'),
+  pb:$('prevBtn'),rb:$('rmBtn'),cprev:$('cprev'),cpb:$('cprevBadge'),
+  th:$('thead'),tb:$('tbody'),tf:$('tfoot'),
+  sbtn:$('sbtn'),slbl:$('slbl'),sarrow:$('sarrow'),pbw:$('pbw'),pbar:$('pb')
+};
+let file=null,csv=null,pv=false;
+
+E.text.addEventListener('input',()=>{
+  const n=E.text.value.length;
+  E.cctr.textContent=`${n} / 2000`;
+  E.cctr.className='cctr'+(n>1800?' warn':'')+(n>=2000?' over':'');
+  sync();
+});
+E.email.addEventListener('input',sync);
+
+E.dz.addEventListener('click',()=>E.fi.click());
+['dragover','dragenter'].forEach(e=>E.dz.addEventListener(e,ev=>{ev.preventDefault();E.dz.classList.add('over');}));
+['dragleave','dragend'].forEach(e=>E.dz.addEventListener(e,()=>E.dz.classList.remove('over')));
+E.dz.addEventListener('drop',ev=>{ev.preventDefault();E.dz.classList.remove('over');if(ev.dataTransfer.files[0])pick(ev.dataTransfer.files[0]);});
+E.fi.addEventListener('change',ev=>{if(ev.target.files[0])pick(ev.target.files[0]);});
+
+function pick(f){
+  if(!f.name.toLowerCase().endsWith('.csv')){toast('Invalid file','Please upload a .csv file.','error');return;}
+  if(f.size>10*1024*1024){toast('File too large','Maximum size is 10 MB.','error');return;}
+  file=f;
+  E.cn.textContent=f.name;
+  E.cm.textContent=`${(f.size/1024).toFixed(1)} KB · Ready`;
+  E.dzw.style.display='none';
+  E.fchip.classList.add('show');
+  E.text.disabled=true;
+  parseCSV(f);sync();
+}
+
+function parseCSV(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    csv=lines.map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,'')));
+    renderTable();
+  };
+  r.readAsText(f);
+}
+
+function renderTable(){
+  if(!csv?.length)return;
+  E.th.innerHTML='';E.tb.innerHTML='';
+  const hr=document.createElement('tr');
+  csv[0].forEach(h=>{const th=document.createElement('th');th.textContent=h;hr.appendChild(th);});
+  E.th.appendChild(hr);
+  const show=Math.min(5,csv.length-1);
+  for(let i=1;i<=show;i++){
+    const tr=document.createElement('tr');
+    csv[i].forEach(c=>{const td=document.createElement('td');td.textContent=c||'—';tr.appendChild(td);});
+    E.tb.appendChild(tr);
+  }
+  const total=csv.length-1;
+  E.cpb.textContent=`${total} row${total!==1?'s':''}`;
+  E.tf.textContent=total>5?`Showing 5 of ${total} rows`:`${total} row${total!==1?'s':''} total`;
+  pv=true;E.cprev.classList.add('show');
+}
+
+E.pb.addEventListener('click',()=>{
+  pv=!pv;E.cprev.classList.toggle('show',pv);
+  E.pb.querySelector('svg').innerHTML=pv
+    ?'<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    :'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+});
+
+E.rb.addEventListener('click',()=>{
+  file=null;csv=null;pv=false;
+  E.fi.value='';E.dzw.style.display='';
+  E.fchip.classList.remove('show');
+  E.cprev.classList.remove('show');
+  E.text.disabled=false;sync();
+});
+
+function sync(){
+  E.sbtn.disabled=!(file||( E.email.value.trim()&&E.text.value.trim()));
+}
+
+E.form.addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const email=E.email.value.trim(),text=E.text.value.trim();
+  if(!file&&(!email||!text)){toast('Missing info','Add your email and describe the issue, or upload a CSV.','error');return;}
+  E.sbtn.disabled=true;
+  E.slbl.textContent='Submitting…';
+  E.sarrow.innerHTML='<span class="spin"></span>';
+  startP();
+  try{
+    const fd=new FormData();
+    if(file){
+      fd.append('file',file);
+    }else{
+      const blob=new Blob([`email,ticket_text\n"${email}","${text.replace(/"/g,'""').replace(/\n/g,' ')}"`],{type:'text/csv'});
+      fd.append('file',blob,'ticket.csv');
+    }
+    const res=await fetch(WEBHOOK,{method:'POST',body:fd});
+    if(res.ok){
+      finishP();
+      toast('Ticket submitted!','Our AI is on it. You\'ll receive a reply at your email shortly.','success');
+      resetForm();
+    }else throw new Error(res.status);
+  }catch(err){
+    console.error(err);
+    toast('Submission failed','Could not reach the server. Please try again.','error');
+  }finally{
+    E.slbl.textContent='Submit Ticket';
+    E.sarrow.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
+    stopP();sync();
+  }
+});
+
+function resetForm(){
+  E.form.reset();
+  E.cctr.textContent='0 / 2000';E.cctr.className='cctr';
+  if(file){file=null;csv=null;pv=false;E.dzw.style.display='';E.fchip.classList.remove('show');E.cprev.classList.remove('show');E.text.disabled=false;}
+  sync();
+}
+
+let pt;
+function startP(){E.pbw.classList.add('show');E.pbar.style.width='0%';let w=0;pt=setInterval(()=>{w=Math.min(w+Math.random()*9,82);E.pbar.style.width=w+'%';},200);}
+function finishP(){clearInterval(pt);E.pbar.style.width='100%';}
+function stopP(){setTimeout(()=>{E.pbw.classList.remove('show');E.pbar.style.width='0%';},600);}
+
+const TICK='<polyline points="20 6 9 17 4 12"/>';
+const CROSS='<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+function toast(title,msg,type='success'){
+  const tc=$('tc');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="tico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${type==='success'?TICK:CROSS}</svg></div><div class="ttext"><div class="ttitle">${title}</div><div class="tmsg">${msg}</div></div>`;
+  tc.appendChild(t);
+  setTimeout(()=>{t.classList.add('exit');setTimeout(()=>t.remove(),300);},4200);
+}
+</script>
+</body>
+</html>

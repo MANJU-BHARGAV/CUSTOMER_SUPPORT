@@ -1,0 +1,423 @@
+{
+  "name": "Customer Support AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d5399633-16f5-4cb7-a5d7-701195180fda",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -768,
+        256
+      ],
+      "id": "57a2a3c0-e27d-456b-a1e9-763b2c00ecc8",
+      "name": "Webhook1",
+      "webhookId": "d5399633-16f5-4cb7-a5d7-701195180fda"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.93.101:5000/classify_csv",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -544,
+        256
+      ],
+      "id": "3eeec031-a1ba-49c6-8f5d-0bc9e03f4175",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.prediction }}",
+                    "rightValue": "incident",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "406d2036-cb13-4eee-8a2b-59ea0c9f1c0c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "428f9b7e-1d7d-405f-8c6a-e35d8c123165",
+                    "leftValue": "={{ $json.prediction }}",
+                    "rightValue": "request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0a395f20-0fa1-4a93-958d-b14a657116d7",
+                    "leftValue": "={{ $json.prediction }}",
+                    "rightValue": "change",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "18bea866-e113-4593-af2d-265dbb464fcf",
+                    "leftValue": "={{ $json.prediction }}",
+                    "rightValue": "problem",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -320,
+        224
+      ],
+      "id": "ac787fea-4045-4658-ab01-44cb58dbb956",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        -32
+      ],
+      "id": "6a6b828e-e4f6-453f-b8bb-b7f665f966ed",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        160
+      ],
+      "id": "10a8e8d8-708c-44c2-b5e0-4cef730a3683",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        352
+      ],
+      "id": "623b3cc9-5013-413d-8227-ea06865cba1e",
+      "name": "Convert to File2"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        544
+      ],
+      "id": "290c0925-7e81-4e89-922e-e297856fc52d",
+      "name": "Convert to File3"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-4909281199",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "Here are the incident_tickets.xlsx file"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        -32
+      ],
+      "id": "d5679774-d3d4-4650-a3bd-5bec5724fe24",
+      "name": "INCIDENT",
+      "webhookId": "b9e4e8d6-155b-4961-adc9-0bcaa47535e2",
+      "credentials": {
+        "telegramApi": {
+          "id": "tl8p5vGyQDxE6xEF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-4954909540",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "Here are the change_tickets.xlsx file"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        352
+      ],
+      "id": "7eb359a4-fc80-409d-8464-1c85b9e642b4",
+      "name": "CHANGE",
+      "webhookId": "b9e4e8d6-155b-4961-adc9-0bcaa47535e2",
+      "credentials": {
+        "telegramApi": {
+          "id": "tl8p5vGyQDxE6xEF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-4837820741",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "Here are the problem_tickets.xlsx file"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        544
+      ],
+      "id": "a5f2cce8-bd17-4c7d-ac1b-6f27b966215b",
+      "name": "PROBLEM",
+      "webhookId": "b9e4e8d6-155b-4961-adc9-0bcaa47535e2",
+      "credentials": {
+        "telegramApi": {
+          "id": "tl8p5vGyQDxE6xEF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "-4827085227",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "Here are the request_tickets.xlsx file"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        160
+      ],
+      "id": "6e9d84c1-1b12-4848-8fbb-56bc1022549e",
+      "name": "REQUEST",
+      "webhookId": "b9e4e8d6-155b-4961-adc9-0bcaa47535e2",
+      "credentials": {
+        "telegramApi": {
+          "id": "tl8p5vGyQDxE6xEF",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "INCIDENT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File3": {
+      "main": [
+        [
+          {
+            "node": "PROBLEM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File2": {
+      "main": [
+        [
+          {
+            "node": "CHANGE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "REQUEST",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "66f4ea41-3cbf-4a9f-bb2a-f30dfbc898a8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a01907f36cfc8064cddfd22ff838fa0669a8923de4684b28d55dc1c4ecb2e082"
+  },
+  "id": "ziaemY5gwEGFs6YW",
+  "tags": []
+}
